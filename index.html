@@ -1,13 +1,57 @@
 <!DOCTYPE html>
+<link rel="icon" href="./img/Retroactive_R_Logo.png"></link>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=https://flash.daisy.audio/">
-    <link rel="canonical" href="https://flash.daisy.audio/">
+    <meta charset="UTF-8">
+    <title>Retroactive DSP Firmware Updater</title>
+    <link rel="stylesheet" href="css/chatstyle.css">
 </head>
 <body>
-  <h1>Redirecting to new tool..."</h1>
-  <p>If your browser does not automatically redirect, <a href="https://flash.daisy.audio/">click here</a>.</p>
+
+<div class="page">
+
+    <header class="site-header">
+        <div class="brand">
+            <div class="brand-kicker">Firmware Utility</div>
+            <h1 class="brand-title">Retroactive.DSP</h1>
+        </div>
+    </header>
+
+    <section class="section">
+        <h2 class="section-title">Connect Device</h2>
+        <button id="connectBtn" class="button-primary">
+            Connect Daisy
+        </button>
+    </section>
+
+    <section class="section">
+        <h2 class="section-title">Select Firmware</h2>
+        <label for="firmwareSelect">Firmware Version</label>
+        <select id="firmwareSelect">
+            <option>Loading firmware...</option>
+        </select>
+    </section>
+
+    <section class="section">
+        <h2 class="section-title">Flash Firmware</h2>
+        <button id="flashBtn" class="button-accent" disabled>
+            Flash Firmware
+        </button>
+    </section>
+
+    <section class="section">
+        <h2 class="section-title">Status</h2>
+        <div id="statusLog" class="log-box">
+            Ready.
+        </div>
+    </section>
+
+</div>
+
+<script src="dfu/dfu.js"></script>
+<script src="dfu/dfuse.js"></script>
+<script src="dfu/FileSaver.js"></script>
+<script type="module" src="js/app.js"></script>
+
 </body>
 </html>
