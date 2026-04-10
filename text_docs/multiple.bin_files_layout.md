@@ -1,0 +1,23 @@
+{
+"product": "Retroactive DSP Synth",
+"releases":
+[
+ {
+"name": "Firmware v1.0.test",
+"file": "firmware/stable/ADSR_V2.bin"
+},
+{
+"name": "Firmware v2.0.test",
+ "file": "firmware/stable/ADSR_V2.bin"
+},
+{
+"name": "Firmware v2.2.test",
+"file": "firmware/stable/ADSR_V2.bin"
+}
+]
+}
+
+
+
+
+

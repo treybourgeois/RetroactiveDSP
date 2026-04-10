@@ -72,6 +72,15 @@ img {
   padding: 14px 0 24px;
 }
 
+.logo {
+  max-width: 200px; /* control size */
+  height: 250px;
+
+  /* Glow effect */
+  filter: drop-shadow(0 0 8px #ffffff)
+          drop-shadow(0 0 16px #00ffe5);
+}
+
 .brand {
   display: flex;
   flex-direction: column;
