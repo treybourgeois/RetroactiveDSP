@@ -299,6 +299,18 @@ img {
   font-size: 0.96rem;
 }
 
+.instruction-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.75em;
+  font-size: 1.15em;
+  font-weight: 900;
+  line-height: 1em;
+  vertical-align: middle;
+  margin-right: 0.22em;
+}
+
 /* Form controls */
 label {
   display: block;
