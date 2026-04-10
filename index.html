@@ -1,10 +1,58 @@
 <!DOCTYPE html>
-<link rel="icon" href="./img/R_logo_nobackground.png"></link>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Retroactive DSP Firmware Updater</title>
+    <link rel="icon" href="./img/R_logo_nobackground.png">
     <link rel="stylesheet" href="css/chatstyle.css">
+
+    <style>
+        .status-wrap {
+            margin-top: 10px;
+        }
+
+        .status-bar-outer {
+            width: 100%;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.35);
+        }
+
+        .status-bar-inner {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.25s ease;
+            background: linear-gradient(90deg, #00d2ff, #7cf7ff);
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.65);
+        }
+
+        .status-message {
+            margin-top: 14px;
+            min-height: 28px;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .status-message.success {
+            color: #4cff88;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(76, 255, 136, 0.45);
+        }
+
+        .status-message.error {
+            color: #ff5a5a;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(255, 90, 90, 0.35);
+        }
+
+        .status-message.idle {
+            color: rgba(255, 255, 255, 0.75);
+        }
+    </style>
 </head>
 <body>
 
@@ -19,34 +67,34 @@
     </header>
 
     <section class="section">
-        <h2 class="section-title">Connect Device</h2>
+        <h2 class="section-title">Step 1 â€¢ Connect Device</h2>
         <p>
             Click Connect, then place your Daisy into <strong>BOOTLOADER MODE</strong> and select it from the USB popup.
         </p>
         <button id="connectBtn" class="button-primary">
-            Connect Daisy
+            Connect
         </button>
         <p>
-            <span class="instruction-dot">•</span> To enter <strong>BOOTLOADER MODE</strong>, press <strong>CONNECT</strong> and then
+            <span class="instruction-dot">â€¢</span> To enter <strong>BOOTLOADER MODE</strong>, press <strong>CONNECT</strong> and then
             <strong>RESET</strong> on the Daisy Seed. <strong>"DAISY BOOTLOADER"</strong> should appear in the popup window.
         </p>
         <p>
-            <span class="instruction-dot">•</span> If <strong>"DAISY BOOTLOADER"</strong> disappears from the popup after only a few seconds, simply press
-            <strong>BOOT (ONCE)</strong> while <strong>"DAISY BOOTLOADER"</strong> is displayed in the popup window.
+            <span class="instruction-dot">â€¢</span> If <strong>"DAISY BOOTLOADER"</strong> disappears from the popup after only a few seconds, simply press
+            <strong>BOOT (ONCE)</strong> while <strong>"DAISY BOOTLOADER - PAIRED"</strong> is displayed in the popup window.
             This will lock in Bootloader mode indefinitely.
         </p>
         <p>
-            <span class="instruction-dot">•</span> Once done correctly, a solid Red LED will be above the <strong>RESET</strong> button, and a pulsing
+            <span class="instruction-dot">â€¢</span> Once done correctly, a solid Red LED will be above the <strong>RESET</strong> button, and a pulsing
             LED should be above <strong>BOOT</strong>.
         </p>
         <p>
-            <span class="instruction-dot">•</span> If <strong>"DAISY BOOTLOADER"</strong> isn't showing in the popup window after following the above steps,
+            <span class="instruction-dot">â€¢</span> If <strong>"DAISY BOOTLOADER"</strong> isn't showing in the popup window after following the above steps,
             see bottom of page for further instructions.
         </p>
     </section>
 
     <section class="section">
-        <h2 class="section-title">Select Firmware</h2>
+        <h2 class="section-title">Step 2 â€¢ Select Firmware</h2>
         <label for="firmwareSelect">Firmware Version</label>
         <select id="firmwareSelect">
             <option>Loading firmware...</option>
@@ -54,7 +102,7 @@
     </section>
 
     <section class="section">
-        <h2 class="section-title">Flash Firmware</h2>
+        <h2 class="section-title">Step 3 â€¢ Flash Firmware</h2>
         <button id="flashBtn" class="button-accent" disabled>
             Flash Firmware
         </button>
@@ -62,9 +110,23 @@
 
     <section class="section">
         <h2 class="section-title">Status</h2>
-        <div id="statusLog" class="log-box">
-            Ready.
+        <div class="status-wrap">
+            <div class="status-bar-outer">
+                <div id="statusBar" class="status-bar-inner"></div>
+            </div>
+            <div id="statusMessage" class="status-message idle"></div>
         </div>
+    </section>
+
+    <section class="section">
+        <h2 class="section-title">Bootloader Recovery</h2>
+        <p>
+            If bootloader mode does not appear after clicking Connect, connect again and place the Daisy
+            into DFU mode, then use the recovery button below to flash the bootloader.
+        </p>
+        <button id="flashBootloaderBtn" class="button-primary" disabled>
+            Flash Bootloader
+        </button>
     </section>
 
 </div>
