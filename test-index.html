@@ -1,53 +1,120 @@
 <!DOCTYPE html>
-<link rel="icon" href="./img/ES_Circle_Orange.PNG"></link>
-<html>
-    <head>
-        <!-- Required meta tags for BootstrapVue-->
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Retroactive DSP Firmware Updater</title>
+    <link rel="icon" href="./img/R_logo_nobackground.png">
+    <link rel="stylesheet" href="css/chatstyle.css">
 
-        <title>Daisy Web Programmer</title>
-        <!-- Required Stylesheets for BootstrapVue -->
-        <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css"
-        />
-        <link
-            type="text/css"
-            rel="stylesheet"
-            href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css"
-        />
-        <link type="text/css" rel="stylesheet" href="assets/retroactive.css"/>
+    <style>
+        .status-wrap {
+            margin-top: 10px;
+        }
 
-        <!-- Scripts for DFU -->
-	    <script src="dfu/dfu.js"></script>
-	    <script src="dfu/dfuse.js"></script>
-	    <script src="dfu/FileSaver.js"></script>
-        <script src="app/dfu-util.js"></script>
+        .status-bar-outer {
+            width: 100%;
+            height: 18px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            overflow: hidden;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.35);
+        }
 
-        <!-- Load polyfills to support older browsers (for BootstrapVue? -- it was in the example) -->
-        <script src="https://polyfill.io/v3/polyfill.min.js?features=es2015%2CIntersectionObserver"></script>
+        .status-bar-inner {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            transition: width 0.25s ease;
+            background: linear-gradient(90deg, #00d2ff, #7cf7ff);
+            box-shadow: 0 0 12px rgba(0, 210, 255, 0.65);
+        }
 
-        <!-- Required scripts for BootstrapVue -->
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14"></script>
-        <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+        .status-message {
+            margin-top: 14px;
+            min-height: 28px;
+            font-size: 16px;
+            line-height: 1.4;
+        }
 
-    </head>
-    <body>
-        <div id="app">
+        .status-message.success {
+            color: #4cff88;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(76, 255, 136, 0.45);
+        }
+
+        .status-message.error {
+            color: #ff5a5a;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(255, 90, 90, 0.35);
+        }
+
+        .status-message.idle {
+            color: rgba(255, 255, 255, 0.75);
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <header class="site-header">
+        <div class="brand">
+            <img src="img/R_logo_nobackground.png" alt="My Logo" class="logo">
+            <div class="brand-kicker">Firmware Utility</div>
+            <h1 class="brand-title">Retroactive.DSP</h1>
         </div>
-        <script src="./app/app.js"></script>
+    </header>
 
-	<!--markedjs -->
-	<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <section class="section">
+        <h2 class="section-title">Connect Device</h2>
+        <button id="connectBtn" class="button-primary">
+            Connect Daisy
+        </button>
+    </section>
 
+    <section class="section">
+        <h2 class="section-title">Select Firmware</h2>
+        <label for="firmwareSelect">Firmware Version</label>
+        <select id="firmwareSelect">
+            <option>Loading firmware...</option>
+        </select>
+    </section>
 
-	<!-- highlightjs -->
-	<link rel="stylesheet"
-        href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/arduino-light.min.css">
-        <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js"></script>
+    <section class="section">
+        <h2 class="section-title">Flash Firmware</h2>
+        <button id="flashBtn" class="button-accent" disabled>
+            Flash Firmware
+        </button>
+    </section>
 
-    </body>
+    <section class="section">
+        <h2 class="section-title">Status</h2>
+        <div class="status-wrap">
+            <div class="status-bar-outer">
+                <div id="statusBar" class="status-bar-inner"></div>
+            </div>
+            <div id="statusMessage" class="status-message idle"></div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2 class="section-title">Bootloader Recovery</h2>
+        <p>
+            If bootloader mode does not appear after clicking Connect, connect again and place the Daisy
+            into DFU mode, then use the recovery button below to flash the bootloader.
+        </p>
+        <button id="flashBootloaderBtn" class="button-primary" disabled>
+            Flash Bootloader
+        </button>
+    </section>
+
+</div>
+
+<script src="dfu/dfu.js"></script>
+<script src="dfu/dfuse.js"></script>
+<script src="dfu/FileSaver.js"></script>
+<script type="module" src="js/app.js"></script>
+
+</body>
 </html>
