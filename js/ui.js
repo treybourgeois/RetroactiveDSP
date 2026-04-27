@@ -6,6 +6,14 @@ function getStatusMessage() {
   return document.getElementById("statusMessage");
 }
 
+function getStatusPercent() {
+  return document.getElementById("statusPercent");
+}
+
+function getConnectionStatusPill() {
+  return document.getElementById("connectionStatus");
+}
+
 export function clearStatus() {
   const bar = getStatusBar();
   const msg = getStatusMessage();
@@ -18,14 +26,31 @@ export function clearStatus() {
     msg.textContent = "";
     msg.className = "status-message idle";
   }
+
+  const percent = getStatusPercent();
+  if (percent) {
+    percent.textContent = "0%";
+  }
 }
 
 export function setProgress(percent) {
   const bar = getStatusBar();
-  if (!bar) return;
+  const msg = getStatusMessage();
+  const percentEl = getStatusPercent();
 
   const safePercent = Math.max(0, Math.min(100, percent));
-  bar.style.width = `${safePercent}%`;
+  if (bar) {
+    bar.style.width = `${safePercent}%`;
+  }
+
+  if (percentEl) {
+    percentEl.textContent = `${Math.round(safePercent)}%`;
+  }
+
+  if (msg && safePercent > 0 && safePercent < 100) {
+    msg.textContent = "Flash in progress - do not disconnect.";
+    msg.className = "status-message flashing";
+  }
 }
 
 export function showSuccess(message = "👍 Flash successful.") {
@@ -63,5 +88,23 @@ export function setBootloaderFlashEnabled(enabled) {
   const bootloaderBtn = document.getElementById("flashBootloaderBtn");
   if (bootloaderBtn) {
     bootloaderBtn.disabled = !enabled;
+  }
+}
+
+export function setConnectionStatus(
+  state = "disconnected",
+  message = "Not connected"
+) {
+  const pill = getConnectionStatusPill();
+  if (!pill) return;
+
+  const allowedStates = new Set(["disconnected", "busy", "ready", "error"]);
+  const safeState = allowedStates.has(state) ? state : "disconnected";
+
+  pill.className = `status-pill ${safeState}`;
+
+  const label = pill.querySelector(".connection-label");
+  if (label) {
+    label.textContent = message;
   }
 }

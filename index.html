@@ -71,9 +71,15 @@
         <p>
             Click Connect, then place your Daisy into <strong>BOOTLOADER MODE</strong> and select it from the USB popup.
         </p>
-        <button id="connectBtn" class="button-primary">
-            Connect
-        </button>
+        <div class="connect-row">
+            <button id="connectBtn" class="button-primary">
+                Connect
+            </button>
+            <span id="connectionStatus" class="status-pill disconnected">
+                <span class="badge-dot"></span>
+                <span class="connection-label">Not connected</span>
+            </span>
+        </div>
         <p>
             <span class="instruction-dot">•</span> To enter <strong>BOOTLOADER MODE</strong>, press <strong>CONNECT</strong> and then
             <strong>RESET</strong> on the Daisy Seed. <strong>"DAISY BOOTLOADER"</strong> should appear in the popup window.
@@ -82,14 +88,6 @@
             <span class="instruction-dot">•</span> If <strong>"DAISY BOOTLOADER"</strong> disappears from the popup after only a few seconds, simply press
             <strong>BOOT (ONCE)</strong> while <strong>"DAISY BOOTLOADER - PAIRED"</strong> is displayed in the popup window.
             This will lock in Bootloader mode indefinitely.
-        </p>
-        <p>
-            <span class="instruction-dot">•</span> Once done correctly, a solid Red LED will be above the <strong>RESET</strong> button, and a pulsing
-            LED should be above <strong>BOOT</strong>.
-        </p>
-        <p>
-            <span class="instruction-dot">•</span> If <strong>"DAISY BOOTLOADER"</strong> isn't showing in the popup window after following the above steps,
-            see bottom of page for further instructions.
         </p>
     </section>
 
@@ -111,22 +109,37 @@
     <section class="section">
         <h2 class="section-title">Status</h2>
         <div class="status-wrap">
-            <div class="status-bar-outer">
-                <div id="statusBar" class="status-bar-inner"></div>
+            <div class="status-bar-row">
+                <div class="status-bar-outer">
+                    <div id="statusBar" class="status-bar-inner"></div>
+                </div>
+                <div id="statusPercent" class="status-percent">0%</div>
             </div>
             <div id="statusMessage" class="status-message idle"></div>
         </div>
     </section>
 
-    <section class="section">
-        <h2 class="section-title">Bootloader Recovery</h2>
+    <section class="section troubleshooting-section">
+        <h2 class="section-title">Troubleshooting</h2>
+        <div class="browser-support-note">
+            🛑 While users have reported intermittent success with Firefox and Safari, Google Chrome is the only officially supported browser for flashing firmware to Daisy.
+        </div>
+        <h3 class="section-title">Reset USB Driver with Zadig (Windows Only)</h3>
         <p>
-            If bootloader mode does not appear after clicking Connect, connect again and place the Daisy
-            into DFU mode, then use the recovery button below to flash the bootloader.
+            If Chrome cannot find your device, you may need to install the correct USB driver:
         </p>
-        <button id="flashBootloaderBtn" class="button-primary" disabled>
-            Flash Bootloader
-        </button>
+        <ol>
+            <li>Download <a href="https://zadig.akeo.ie/" target="_blank" rel="noopener noreferrer">Zadig</a> (latest version).</li>
+            <li>Launch <strong>Zadig</strong>.</li>
+            <li>Put device into <strong>BOOTLOADER</strong> mode by following the above steps.</li>
+            <li>In Zadig, click <strong>Options</strong> then <strong>List All Devices</strong>.</li>
+            <li>Select <strong>Daisy Bootloader</strong> from the dropdown.</li>
+            <li>Set the target driver (right side) to <strong>WinUSB</strong>.</li>
+            <li>Click <strong>Replace Driver</strong>.</li>
+        </ol>
+        <p>
+            After Zadig finishes, return to Chrome and try connecting again.
+        </p>
     </section>
 
 </div>
