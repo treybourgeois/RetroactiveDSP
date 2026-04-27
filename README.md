@@ -1,2 +1,2 @@
-# RetroactiveDSP.github.io
+# treybourgeois.github.io/RetroactiveDSP
 RetroactiveDSP Firmware Updates Repo
