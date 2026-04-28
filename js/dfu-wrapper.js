@@ -6,6 +6,15 @@ function toHex(value, width = 4) {
   return value.toString(16).toUpperCase().padStart(width, "0");
 }
 
+function describeDevice(usbDevice) {
+  if (!usbDevice) return "unknown device";
+  const product = usbDevice.productName || "Unknown Product";
+  const serial = usbDevice.serialNumber || "n/a";
+  return `${product} (VID 0x${toHex(usbDevice.vendorId)}, PID 0x${toHex(
+    usbDevice.productId
+  )}, serial ${serial})`;
+}
+
 function hasDfuInterface(usbDevice) {
   if (!usbDevice.configuration || !usbDevice.configuration.interfaces) {
     return false;
@@ -26,17 +35,39 @@ export async function connectDevice(mode = "auto") {
   }
 
   const normalizedMode = mode === "fs" ? "fs" : "app";
+  if (selectedDevice) {
+    try {
+      if (selectedDevice.opened) {
+        await selectedDevice.close();
+      }
+    } catch (closeErr) {
+      // Ignore close failures from stale handles.
+    } finally {
+      selectedDevice = null;
+    }
+  }
+
   const filters =
     normalizedMode === "fs"
       ? [{ vendorId: STM_VENDOR_ID, productId: STM_DFU_PRODUCT_ID }]
       : [
           { vendorId: STM_VENDOR_ID, productId: STM_DFU_PRODUCT_ID },
-          { vendorId: STM_VENDOR_ID }
+          { classCode: 0xfe, subclassCode: 0x01 }
         ];
 
   const device = await navigator.usb.requestDevice({ filters });
 
-  await device.open();
+  try {
+    await device.open();
+  } catch (err) {
+    const message = (err && err.message ? err.message : String(err)).toLowerCase();
+    if (message.includes("access denied")) {
+      throw new Error(
+        `Access denied while opening ${describeDevice(device)}. Close other tabs/apps using the device, then in Windows Zadig bind this exact device to WinUSB and retry Connect.`
+      );
+    }
+    throw err;
+  }
 
   if (device.configuration === null) {
     await device.selectConfiguration(1);
@@ -44,7 +75,9 @@ export async function connectDevice(mode = "auto") {
 
   const productName = (device.productName || "").toLowerCase();
   const looksLikeDaisyBootloader =
-    productName.includes("daisy") || productName.includes("bootloader");
+    productName.includes("daisy") ||
+    productName.includes("bootloader") ||
+    productName.includes("dfu");
   const isStmRomDfu =
     device.vendorId === STM_VENDOR_ID && device.productId === STM_DFU_PRODUCT_ID;
 
@@ -61,7 +94,7 @@ export async function connectDevice(mode = "auto") {
     );
   }
 
-  if (normalizedMode === "app" && !isStmRomDfu && !looksLikeDaisyBootloader) {
+  if (normalizedMode === "app" && !isStmRomDfu && !looksLikeDaisyBootloader && !hasDfuInterface(device)) {
     try {
       await device.close();
     } catch (closeErr) {
@@ -69,8 +102,7 @@ export async function connectDevice(mode = "auto") {
     }
 
     throw new Error(
-      `Selected device is not Daisy bootloader (VID 0x${toHex(STM_VENDOR_ID)}, PID 0x${toHex(STM_DFU_PRODUCT_ID)}). ` +
-        "In the USB popup choose DAISY BOOTLOADER, not the external programmer."
+      "Selected device is not a DFU-capable bootloader device. In the USB popup choose DAISY BOOTLOADER or STM32 DFU in FS Mode."
     );
   }
 

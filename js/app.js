@@ -6,6 +6,7 @@ import {
   setProgress,
   setConnectionStatus,
   showSuccess,
+  showIdle,
   showError
 } from "./ui.js";
 import { connectDevice, getConnectedDevice } from "./dfu-wrapper.js";
@@ -462,9 +463,14 @@ window.addEventListener("DOMContentLoaded", async () => {
         if (flashBootloaderBtn) {
           setBootloaderFlashEnabled(true);
         }
+        showIdle("Device connected.");
         setConnectionStatus("ready", "Connected");
       }
     } catch (err) {
+      setFlashEnabled(false);
+      if (flashBootloaderBtn) {
+        setBootloaderFlashEnabled(false);
+      }
       setConnectionStatus("error", "Connection failed");
       showError(`Connection failed: ${formatError(err)}`);
     }

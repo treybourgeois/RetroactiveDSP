@@ -98,8 +98,11 @@ export function setConnectionStatus(
   const pill = getConnectionStatusPill();
   if (!pill) return;
 
+  const normalizedState = state === "connected" ? "ready" : state;
   const allowedStates = new Set(["disconnected", "busy", "ready", "error"]);
-  const safeState = allowedStates.has(state) ? state : "disconnected";
+  const safeState = allowedStates.has(normalizedState)
+    ? normalizedState
+    : "disconnected";
 
   pill.className = `status-pill ${safeState}`;
 
