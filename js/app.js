@@ -10,12 +10,14 @@ import {
 } from "./ui.js";
 import { connectDevice, getConnectedDevice } from "./dfu-wrapper.js";
 
-const BOOTLOADER_FILE = "Data/bootloader.bin";
+const BOOTLOADER_FILE =
+  "firmware/stable/dsy_bootloader_v6_4-extdfu-2000ms_ripped.bin";
 const DEFAULT_DFU_TRANSFER_SIZE = 1024;
 const DOWNLOAD_PROGRESS_START = 70;
 const DOWNLOAD_PROGRESS_END = 99;
 const QSPI_INTERFACE_BASE_ADDRESS = 0x90000000;
 const APP_FLASH_START_ADDRESS = 0x90040000;
+const INTERNAL_FLASH_BASE_ADDRESS = 0x08000000;
 const FLASH_TIMEOUT_MIN_MS = 180000;
 const FLASH_TIMEOUT_MAX_MS = 600000;
 
@@ -93,7 +95,7 @@ async function fetchBinary(path) {
   return await response.arrayBuffer();
 }
 
-function findDfuInterfaceInfo(usbDevice) {
+function findDfuInterfaceInfo(usbDevice, mode = "app") {
   if (!usbDevice.configuration || !usbDevice.configuration.interfaces) {
     throw new Error("Connected USB device has no active configuration.");
   }
@@ -116,11 +118,18 @@ function findDfuInterfaceInfo(usbDevice) {
         let score = 0;
         if (isDfuClass && isDfuSubclass) score += 10;
         if (name.startsWith("@")) score += 8;
-        if (name.includes("0x90000000")) score += 12;
-        if (name.includes("qspi")) score += 10;
-        if (name.includes("external flash")) score += 6;
-        if (name.includes("0x08000000")) score += 2;
-        if (name.includes("internal flash")) score += 1;
+        if (mode === "bootloader") {
+          if (name.includes("0x08000000")) score += 16;
+          if (name.includes("internal flash")) score += 10;
+          if (name.includes("0x90000000")) score -= 8;
+          if (name.includes("qspi")) score -= 8;
+        } else {
+          if (name.includes("0x90000000")) score += 12;
+          if (name.includes("qspi")) score += 10;
+          if (name.includes("external flash")) score += 6;
+          if (name.includes("0x08000000")) score += 2;
+          if (name.includes("internal flash")) score += 1;
+        }
         if (name.includes("dfu")) score += 2;
         if (name.includes("bootloader")) score += 1;
 
@@ -143,7 +152,7 @@ function findDfuInterfaceInfo(usbDevice) {
   throw new Error("No DFU-capable interface was found on the connected device.");
 }
 
-async function createDfuDevice(usbDevice) {
+async function createDfuDevice(usbDevice, mode = "app") {
   if (!usbDevice.opened) {
     await usbDevice.open();
   }
@@ -152,7 +161,7 @@ async function createDfuDevice(usbDevice) {
     await usbDevice.selectConfiguration(1);
   }
 
-  const dfuInfo = findDfuInterfaceInfo(usbDevice);
+  const dfuInfo = findDfuInterfaceInfo(usbDevice, mode);
 
   try {
     await usbDevice.claimInterface(dfuInfo.interface.interfaceNumber);
@@ -296,7 +305,7 @@ function bindDownloadProgress(dfuDevice) {
   };
 }
 
-function configureDfuseStartAddressIfAvailable(dfuDevice) {
+function configureDfuseStartAddressIfAvailable(dfuDevice, mode = "app") {
   if (
     typeof dfuse === "undefined" ||
     !(dfuDevice instanceof dfuse.Device) ||
@@ -314,17 +323,17 @@ function configureDfuseStartAddressIfAvailable(dfuDevice) {
     return;
   }
 
-  let targetSegment = writableSegments.find(
-    (segment) =>
-      segment.start <= APP_FLASH_START_ADDRESS &&
-      APP_FLASH_START_ADDRESS < segment.end
-  );
+  const preferredAddress =
+    mode === "bootloader" ? INTERNAL_FLASH_BASE_ADDRESS : APP_FLASH_START_ADDRESS;
+  const secondaryAddress =
+    mode === "bootloader" ? APP_FLASH_START_ADDRESS : QSPI_INTERFACE_BASE_ADDRESS;
 
-  if (!targetSegment) {
+  let targetSegment = writableSegments.find(
+    (segment) => segment.start <= preferredAddress && preferredAddress < segment.end
+  );
+  if (!targetSegment && secondaryAddress) {
     targetSegment = writableSegments.find(
-      (segment) =>
-        segment.start <= QSPI_INTERFACE_BASE_ADDRESS &&
-        QSPI_INTERFACE_BASE_ADDRESS < segment.end
+      (segment) => segment.start <= secondaryAddress && secondaryAddress < segment.end
     );
   }
 
@@ -332,11 +341,8 @@ function configureDfuseStartAddressIfAvailable(dfuDevice) {
     targetSegment = writableSegments[0];
   }
 
-  if (
-    targetSegment.start <= APP_FLASH_START_ADDRESS &&
-    APP_FLASH_START_ADDRESS < targetSegment.end
-  ) {
-    dfuDevice.startAddress = APP_FLASH_START_ADDRESS;
+  if (targetSegment.start <= preferredAddress && preferredAddress < targetSegment.end) {
+    dfuDevice.startAddress = preferredAddress;
   } else {
     dfuDevice.startAddress = targetSegment.start;
   }
@@ -355,7 +361,7 @@ async function restartDeviceIfPossible(usbDevice) {
   }
 }
 
-async function flashBinaryFile(path) {
+async function flashBinaryFile(path, mode = "app") {
   const usbDevice = getConnectedDevice();
 
   if (!usbDevice) {
@@ -368,8 +374,8 @@ async function flashBinaryFile(path) {
   const binary = await fetchBinary(path);
   setProgress(35);
 
-  const dfuDevice = await createDfuDevice(usbDevice);
-  configureDfuseStartAddressIfAvailable(dfuDevice);
+  const dfuDevice = await createDfuDevice(usbDevice, mode);
+  configureDfuseStartAddressIfAvailable(dfuDevice, mode);
   setProgress(55);
 
   await clearErrorStateIfNeeded(dfuDevice);
@@ -427,6 +433,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   clearStatus();
   setConnectionStatus("disconnected", "Not connected");
+  setFlashEnabled(false);
+  setBootloaderFlashEnabled(false);
 
   try {
     const firmwareList = await loadFirmwareList();
@@ -447,7 +455,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     setConnectionStatus("busy", "Waiting for device...");
 
     try {
-      const info = await connectDevice();
+      const info = await connectDevice("app");
 
       if (info) {
         setFlashEnabled(true);
@@ -474,7 +482,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         throw new Error("No firmware selected.");
       }
 
-      const restarted = await flashBinaryFile(firmwarePath);
+      const restarted = await flashBinaryFile(firmwarePath, "app");
       if (restarted) {
         showSuccess("👍 Firmware flashed successfully. Device restarting...");
       } else {
@@ -497,7 +505,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         flashBtn.disabled = true;
         flashBootloaderBtn.disabled = true;
 
-        const restarted = await flashBinaryFile(BOOTLOADER_FILE);
+        const restarted = await flashBinaryFile(BOOTLOADER_FILE, "bootloader");
         if (restarted) {
           showSuccess("👍 Bootloader flashed successfully. Device restarting...");
         } else {

@@ -13,21 +13,26 @@ function hasDfuInterface(usbDevice) {
 
   return usbDevice.configuration.interfaces.some((iface) =>
     iface.alternates.some(
-      (alt) => alt.interfaceClass === 0xfe && alt.interfaceSubclass === 0x01
+      (alt) =>
+        (alt.interfaceClass === 0xfe && alt.interfaceSubclass === 0x01) ||
+        (alt.interfaceName || "").toLowerCase().includes("dfu")
     )
   );
 }
 
-export async function connectDevice() {
+export async function connectDevice(mode = "auto") {
   if (!("usb" in navigator)) {
     throw new Error("WebUSB is not supported in this browser. Use Chrome or another Chromium-based browser.");
   }
 
-  // Prefer STM32 ROM DFU first, while still allowing manual Daisy bootloader selection.
-  const filters = [
-    { vendorId: STM_VENDOR_ID, productId: STM_DFU_PRODUCT_ID },
-    { vendorId: STM_VENDOR_ID }
-  ];
+  const normalizedMode = mode === "fs" ? "fs" : "app";
+  const filters =
+    normalizedMode === "fs"
+      ? [{ vendorId: STM_VENDOR_ID, productId: STM_DFU_PRODUCT_ID }]
+      : [
+          { vendorId: STM_VENDOR_ID, productId: STM_DFU_PRODUCT_ID },
+          { vendorId: STM_VENDOR_ID }
+        ];
 
   const device = await navigator.usb.requestDevice({ filters });
 
@@ -43,7 +48,20 @@ export async function connectDevice() {
   const isStmRomDfu =
     device.vendorId === STM_VENDOR_ID && device.productId === STM_DFU_PRODUCT_ID;
 
-  if (!isStmRomDfu && !looksLikeDaisyBootloader) {
+  if (normalizedMode === "fs" && !isStmRomDfu) {
+    try {
+      await device.close();
+    } catch (closeErr) {
+      // Ignore close failures.
+    }
+
+    throw new Error(
+      `Selected device is not DFU in FS Mode (VID 0x${toHex(STM_VENDOR_ID)}, PID 0x${toHex(STM_DFU_PRODUCT_ID)}). ` +
+        "For first-time bootloader install, choose STM32 BOOTLOADER / DFU in FS Mode in the USB popup."
+    );
+  }
+
+  if (normalizedMode === "app" && !isStmRomDfu && !looksLikeDaisyBootloader) {
     try {
       await device.close();
     } catch (closeErr) {
@@ -52,7 +70,7 @@ export async function connectDevice() {
 
     throw new Error(
       `Selected device is not Daisy bootloader (VID 0x${toHex(STM_VENDOR_ID)}, PID 0x${toHex(STM_DFU_PRODUCT_ID)}). ` +
-      "In the USB popup choose DAISY BOOTLOADER, not the external programmer."
+        "In the USB popup choose DAISY BOOTLOADER, not the external programmer."
     );
   }
 
@@ -64,7 +82,7 @@ export async function connectDevice() {
     }
 
     throw new Error(
-      "Selected USB device does not expose a DFU interface. Choose DAISY BOOTLOADER in the USB popup."
+      "Selected USB device does not expose a DFU interface. Choose a DFU/BOOTLOADER device in the USB popup."
     );
   }
 
