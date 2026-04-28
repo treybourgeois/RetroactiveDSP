@@ -6,6 +6,11 @@
       "name": "Firmware v1.0.test",
       "file": "firmware/stable/ADSR_V2.bin",
       "repo_branch": "BAKER_EDGE_FX"
+    },
+    {
+      "name": "Retroactive_Bootloader",
+      "file": "firmware/stable/dsy_bootloader_v6_4-extdfu-2000ms_ripped.bin",
+      "repo_branch": "RetroactiveDSP"
     }
   ]
 }
